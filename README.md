@@ -49,8 +49,11 @@ En local, `DATABASE_URL` por defecto usa SQLite (no necesitás Postgres).
 
 ## Deploy en la VPS (requiere chip/número)
 
-Mismo patrón que Rimainder: OpenWA corre aparte (crea la red `openwa-network`), y este
-compose levanta el agente + su Postgres y se une a esa red.
+Mismo patrón que Rimainder, y puede ser el **mismo OpenWA** (soporta varias sesiones, una
+por número; el bot necesita su propia sesión = su propio número). OpenWA corre aparte (crea
+la red `openwa-network`), y este compose levanta el agente + su Postgres y se une a esa red.
+Los servicios se llaman `cuentitas-bot*` para no chocar con el `agent` de Rimainder; el
+webhook de la sesión del bot apunta a `http://cuentitas-bot:8000/webhook`.
 
 ```bash
 cp .env.example .env        # completá todo, incluido OPENWA_* y WEBHOOK_SECRET
