@@ -12,6 +12,13 @@ Esta es la diferencia clave con Rimainder: allá las tools pegaban a una tabla
 import os
 import logging
 import httpx
+from dotenv import load_dotenv
+
+# Cargar el .env al importar este módulo: `api` se instancia acá abajo y otros
+# módulos lo importan antes de llamar a su propio load_dotenv(). Además leemos las
+# env de forma PEREZOSA (en cada request), no en __init__, para no capturar valores
+# vacíos si el .env todavía no estaba cargado al construir el objeto.
+load_dotenv()
 
 logger = logging.getLogger("cuentitasbot")
 
@@ -25,20 +32,25 @@ class CuentitasError(Exception):
 
 
 class CuentitasAPI:
-    def __init__(self):
-        self.base = os.getenv("CUENTITAS_API_URL", "").rstrip("/")
-        self.key = os.getenv("BOT_API_KEY", "")
+    @property
+    def base(self) -> str:
+        return os.getenv("CUENTITAS_API_URL", "").rstrip("/")
+
+    @property
+    def key(self) -> str:
+        return os.getenv("BOT_API_KEY", "")
 
     async def _post(self, path: str, body: dict) -> dict:
-        if not self.base or not self.key:
+        base, key = self.base, self.key
+        if not base or not key:
             raise CuentitasError(
                 "El bot no está configurado: falta CUENTITAS_API_URL o BOT_API_KEY."
             )
-        url = f"{self.base}{path}"
+        url = f"{base}{path}"
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 url,
-                headers={"X-Bot-Key": self.key, "Content-Type": "application/json"},
+                headers={"X-Bot-Key": key, "Content-Type": "application/json"},
                 json=body,
                 timeout=15.0,
             )
