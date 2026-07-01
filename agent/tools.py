@@ -153,9 +153,15 @@ async def ejecutar_tool(nombre: str, args: dict, numero: str) -> dict:
         return {"ok": False, "error": f"Herramienta desconocida: {nombre}"}
 
     except CuentitasError as e:
-        # Errores de negocio (no vinculado, cuenta ambigua, etc.): el modelo los lee
-        # y le explica/pregunta al usuario. `data` puede traer la lista de cuentas.
-        return {"ok": False, "error": str(e), **e.data}
+        # Errores de negocio (no vinculado, código vencido, cuenta ambigua...): devolvemos
+        # SOLO el mensaje legible. NO spreadear e.data crudo: trae {"error":"Bad Request",
+        # "statusCode":400}, que hace que el modelo lo lea como falla técnica y responda
+        # "problema técnico" en vez de relayar el mensaje real. Adjuntamos la lista de
+        # cuentas si vino (caso cuenta ambigua) para que el modelo pueda preguntar.
+        resultado = {"ok": False, "error": str(e)}
+        if isinstance(e.data, dict) and e.data.get("cuentas"):
+            resultado["cuentas"] = e.data["cuentas"]
+        return resultado
     except Exception as e:
         logger.error("Error ejecutando tool %s: %s", nombre, e)
         return {"ok": False, "error": str(e)}
