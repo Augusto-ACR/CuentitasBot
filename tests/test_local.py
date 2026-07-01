@@ -17,8 +17,13 @@ El número de prueba es 'test-local-001'; podés desvincularlo después desde la
 import asyncio
 import sys
 import os
+import logging
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Mostrar SOLO nuestros logs (tool calls + respuestas de la API) para diagnosticar.
+logging.basicConfig(level=logging.WARNING, format="  [debug] %(message)s")
+logging.getLogger("cuentitasbot").setLevel(logging.INFO)
 
 from agent.brain import generar_respuesta
 from agent.prompts import construir_system_prompt
